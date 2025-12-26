@@ -1,0 +1,62 @@
+AWS DataSync | S3 → EFS
+
+Architecture Overview : Source: Private Amazon S3 bucket
+                        Transfer Engine: AWS DataSync
+                        Agent: DataSync Agent running inside Amazon EC2
+                        Destination: Amazon EFS
+
+STEP 1: Amazon S3
+        AWS Console → S3
+        Create bucket
+        Bucket name: datasync-source-bucket
+        Region: same region as EFS & EC2
+        Block Public Access → ON (private bucket)
+        Inside bucket → Upload
+
+STEP 2: Amazon EFS
+        AWS Console → EFS
+        Create file system
+        Security Group: Allow NFS (2049) from EC2 SG
+
+STEP 3: EC2 with DataSync Agent
+        EC2 → Launch Instance
+        sudo yum install -y amazon-efs-utils
+        sudo mkdir /efs
+        sudo mount -t efs fs-xxxxxxxx:/ /efs
+        df -h
+        Copy Data from S3 to EFS: aws s3 sync s3://ashwin-s3-source /efs
+        ls /efs
+
+STEP 4: DataSync – Source Location (S3)
+        DataSync → Locations → Create location
+        Location type: Amazon S3
+        Bucket select pannu
+        IAM role: S3 read access (s3:GetObject, s3:ListBucket)
+        Save
+
+STEP 5: DataSync – Destination Location (EFS)
+        Locations → Create location
+        Location type: Amazon EFS
+        File system select pannu
+        Agent select pannu
+
+STEP 6: Create DataSync Task
+        DataSync → Tasks → Create task
+        Source: S3 location
+        Destination: EFS location
+        Settings: Verify data: ON
+        Preserve metadata: ON
+        Transfer mode: Enhanced
+        Create task
+
+STEP 7: Execute DataSync Task
+        Task open pannu
+        Start task
+        Progress monitor: Files transferred
+                          Bytes transferred
+        Status: Success
+
+
+
+
+        
